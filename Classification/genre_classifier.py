@@ -8,3 +8,49 @@ that is passed into it.
 2. Use the raw wav file and use a CNN with 1DConv to classify the genre.
 3. Ensemble model.
 """
+import torch
+from sklearn.model_selection import train_test_split
+import os
+
+# Directory of dataset used.
+GTZAN_WAV = "../GTZAN/Data/genres_original/"
+GTZAN_MEL = "../GTZAN/Data/images_original/"
+
+
+class Classifier:
+    def __init__(self):
+        self.X_train, self.X_test, self.y_train, self.y_test = 0, 0, 0, 0
+
+    def test_train_split(self, GTZAN):
+        X, Y = [], []
+
+        # Go through all songs and tag X as wav file path, Y as genre.
+        for genre in os.listdir(GTZAN):
+            for song in os.listdir(os.path.join(GTZAN, genre)):
+                X.append(os.path.join(GTZAN, genre, song))
+                Y.append(genre)
+
+        # Obtain train/test split
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+
+# Use the raw wav file to train a model for classification of genre of the wav file
+class RawApproachClassifier(Classifier):
+    def __init__(self):
+        super().__init__()
+
+    def test_train_splitter(self):
+        self.test_train_split(GTZAN_WAV)
+
+
+# Use the mel spectrogram to train a model for classification of genre of the wav file
+class MelSpecApproachClassifier(Classifier):
+    def __init__(self):
+        super().__init__()
+
+    def test_train_splitter(self):
+        self.test_train_split(GTZAN_MEL)
+
+
+if __name__ == '__main__':
+    ...
