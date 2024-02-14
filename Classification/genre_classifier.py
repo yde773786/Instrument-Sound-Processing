@@ -8,8 +8,11 @@ that is passed into it.
 2. Use the raw wav file and use a CNN with 1DConv to classify the genre.
 3. Ensemble model.
 """
-import torch
+import torch.nn as nn
 from sklearn.model_selection import train_test_split
+from PIL import Image
+import torchvision.transforms as transforms
+
 import os
 
 # Directory of dataset used.
@@ -21,17 +24,11 @@ class Classifier:
     def __init__(self):
         self.X_train, self.X_test, self.y_train, self.y_test = 0, 0, 0, 0
 
-    def test_train_split(self, GTZAN):
-        X, Y = [], []
+    def test_train_split(self):
+        raise NotImplementedError
 
-        # Go through all songs and tag X as wav file path, Y as genre.
-        for genre in os.listdir(GTZAN):
-            for song in os.listdir(os.path.join(GTZAN, genre)):
-                X.append(os.path.join(GTZAN, genre, song))
-                Y.append(genre)
-
-        # Obtain train/test split
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    def train_model(self):
+        raise NotImplementedError
 
 
 # Use the raw wav file to train a model for classification of genre of the wav file
@@ -40,17 +37,38 @@ class RawApproachClassifier(Classifier):
         super().__init__()
 
     def test_train_splitter(self):
-        self.test_train_split(GTZAN_WAV)
+        ...
 
 
 # Use the mel spectrogram to train a model for classification of genre of the wav file
 class MelSpecApproachClassifier(Classifier):
+    class MelSpecTrainer(nn.Module):
+        pass
+
     def __init__(self):
         super().__init__()
 
     def test_train_splitter(self):
-        self.test_train_split(GTZAN_MEL)
+        X, Y = [], []
+
+        # Go through all songs and tag X (tensor of image), Y as genre.
+        for genre in os.listdir(GTZAN_MEL):
+            for song in os.listdir(os.path.join(GTZAN_MEL, genre)):
+                abs_path = os.path.join(GTZAN_MEL, genre, song)
+                image = Image.open(abs_path)
+                transform = transforms.Compose([transforms.PILToTensor()])
+                # Convert PIL Image to tensor
+                X.append(transform(image))
+                Y.append(genre)
+
+        # Obtain train/test split
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+    def train_model(self):
+        pass
 
 
 if __name__ == '__main__':
-    ...
+    raw_approach_classifier = RawApproachClassifier()
+    mel_spec_approach_classifier = MelSpecApproachClassifier()
+    mel_spec_approach_classifier.test_train_splitter()
