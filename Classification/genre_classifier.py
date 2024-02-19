@@ -19,6 +19,8 @@ import os
 GTZAN_WAV = "../GTZAN/Data/genres_original/"
 GTZAN_MEL = "../GTZAN/Data/images_original/"
 
+IMAGE_INPUT_DIMENSIONS = [432, 288]
+
 
 class Classifier:
     def __init__(self):
@@ -43,7 +45,35 @@ class RawApproachClassifier(Classifier):
 # Use the mel spectrogram to train a model for classification of genre of the wav file
 class MelSpecApproachClassifier(Classifier):
     class MelSpecTrainer(nn.Module):
-        pass
+        def __init__(self):
+            super().__init__()
+
+            self.current_dimensions = IMAGE_INPUT_DIMENSIONS
+
+            self.conv_layer_1 = nn.Sequential(nn.Conv2d(4, 32, 3),
+                                              nn.ReLU(),
+                                              nn.MaxPool2d(kernel_size=2)
+                                              )
+
+            self.output_dimensions(3, 0, 2)
+
+            self.conv_layer_2 = nn.Sequential(nn.Conv2d(32, 16, 3),
+                                              nn.ReLU(),
+                                              nn.MaxPool2d(kernel_size=2)
+                                              )
+
+            self.output_dimensions(3, 0, 2)
+
+            self.flatten_layer = nn.Flatten()
+
+            self.linear_layer = nn.Sequential(nn.Linear(self.current_dimensions[0] * self.current_dimensions[1], 512),
+                                              nn.ReLU())
+
+            self.classifier = nn.Linear(512, 10)
+
+        def output_dimensions(self, kernel_size, padding, max_pool_2d):
+            self.current_dimensions[0] = (self.current_dimensions[0] + 2 * padding - kernel_size + 1) // max_pool_2d
+            self.current_dimensions[1] = (self.current_dimensions[1] + 2 * padding - kernel_size + 1) // max_pool_2d
 
     def __init__(self):
         super().__init__()
