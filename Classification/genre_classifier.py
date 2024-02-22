@@ -20,6 +20,9 @@ GTZAN_WAV = "../GTZAN/Data/genres_original/"
 GTZAN_MEL = "../GTZAN/Data/images_original/"
 
 IMAGE_INPUT_DIMENSIONS = [432, 288]
+GENRES = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3,
+          'hiphop': 4, 'jazz': '5', 'metal': 6, 'pop': 7, 'reggae': 8,
+          'rock': 9}
 
 
 class Classifier:
@@ -89,7 +92,8 @@ class MelSpecApproachClassifier(Classifier):
                 transform = transforms.Compose([transforms.PILToTensor()])
                 # Convert PIL Image to tensor
                 X.append(transform(image))
-                Y.append(genre)
+                # Convert genre tag to associated digit
+                Y.append(GENRES[genre])
 
         # Obtain train/test split
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
