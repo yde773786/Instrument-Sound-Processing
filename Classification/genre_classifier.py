@@ -9,6 +9,7 @@ that is passed into it.
 3. Ensemble model.
 """
 import torch.nn as nn
+import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from PIL import Image
 import torchvision.transforms as transforms
@@ -21,7 +22,7 @@ GTZAN_MEL = "../GTZAN/Data/images_original/"
 
 IMAGE_INPUT_DIMENSIONS = [432, 288]
 GENRES = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3,
-          'hiphop': 4, 'jazz': '5', 'metal': 6, 'pop': 7, 'reggae': 8,
+          'hiphop': 4, 'jazz': 5, 'metal': 6, 'pop': 7, 'reggae': 8,
           'rock': 9}
 
 
@@ -58,14 +59,10 @@ class MelSpecApproachClassifier(Classifier):
                                               nn.MaxPool2d(kernel_size=2)
                                               )
 
-            self.output_dimensions(3, 0, 2)
-
             self.conv_layer_2 = nn.Sequential(nn.Conv2d(32, 16, 3),
                                               nn.ReLU(),
                                               nn.MaxPool2d(kernel_size=2)
                                               )
-
-            self.output_dimensions(3, 0, 2)
 
             self.flatten_layer = nn.Flatten()
 
@@ -74,12 +71,32 @@ class MelSpecApproachClassifier(Classifier):
 
             self.classifier = nn.Linear(512, 10)
 
+        def forward(self, x):
+            # First 2D convolution layer
+            x = self.conv_layer_1(x)
+            self.output_dimensions(3, 0, 2)
+
+            # Second 2D convolution layer
+            x = self.conv_layer_2(x)
+            self.output_dimensions(3, 0, 2)
+
+            # Linear layer and classifier
+            x = self.flatten_layer(x)
+            x = self.linear_layer(x)
+            x = self.classifier(x)
+
+            return x
+
         def output_dimensions(self, kernel_size, padding, max_pool_2d):
             self.current_dimensions[0] = (self.current_dimensions[0] + 2 * padding - kernel_size + 1) // max_pool_2d
             self.current_dimensions[1] = (self.current_dimensions[1] + 2 * padding - kernel_size + 1) // max_pool_2d
 
     def __init__(self):
         super().__init__()
+        self.model = self.MelSpecTrainer()
+        self.loss_fn = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
+
 
     def test_train_splitter(self):
         X, Y = [], []
@@ -99,7 +116,7 @@ class MelSpecApproachClassifier(Classifier):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
     def train_model(self):
-        pass
+        ...
 
 
 if __name__ == '__main__':
