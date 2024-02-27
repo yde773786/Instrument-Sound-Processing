@@ -9,6 +9,7 @@ that is passed into it.
 3. Ensemble model.
 """
 import torch.nn as nn
+import torch.utils.data as data
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
 from PIL import Image
@@ -97,7 +98,6 @@ class MelSpecApproachClassifier(Classifier):
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
-
     def test_train_splitter(self):
         X, Y = [], []
 
@@ -116,10 +116,26 @@ class MelSpecApproachClassifier(Classifier):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
     def train_model(self):
-        ...
+        data_loader = data.DataLoader(self.X_train, batch_size=5, shuffle=True)
+
+        for epoch in range(50):
+            for batch_id, curr_batch in enumerate(data_loader):
+
+                # Predict and get loss
+                image, label = curr_batch
+                pred = self.model(image)
+                loss = self.loss_fn(pred, label)
+
+                # backward pass
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                print(f"epoch: {epoch}, batch_id: {batch_id}, loss: {loss}")
 
 
 if __name__ == '__main__':
     raw_approach_classifier = RawApproachClassifier()
     mel_spec_approach_classifier = MelSpecApproachClassifier()
     mel_spec_approach_classifier.test_train_splitter()
+    mel_spec_approach_classifier.train_model()
