@@ -9,7 +9,6 @@ that is passed into it.
 3. Ensemble model.
 """
 import torch.nn as nn
-import torch.utils.data as data
 import torch.optim as optim
 import random
 from PIL import Image
@@ -69,7 +68,7 @@ class MelSpecApproachClassifier(Classifier):
 
             self.flatten_layer = nn.Flatten()
 
-            self.linear_layer = nn.Sequential(nn.Linear(self.current_dimensions[0] * self.current_dimensions[1], 512),
+            self.linear_layer = nn.Sequential(nn.Linear(118720, 512),
                                               nn.ReLU())
 
             self.classifier = nn.Linear(512, 10)
@@ -77,11 +76,8 @@ class MelSpecApproachClassifier(Classifier):
         def forward(self, x):
             # First 2D convolution layer
             x = self.conv_layer_1(x)
-            self.output_dimensions(3, 0, 2)
-
             # Second 2D convolution layer
             x = self.conv_layer_2(x)
-            self.output_dimensions(3, 0, 2)
 
             # Linear layer and classifier
             x = self.flatten_layer(x)
@@ -89,10 +85,6 @@ class MelSpecApproachClassifier(Classifier):
             x = self.classifier(x)
 
             return x
-
-        def output_dimensions(self, kernel_size, padding, max_pool_2d):
-            self.current_dimensions[0] = (self.current_dimensions[0] + 2 * padding - kernel_size + 1) // max_pool_2d
-            self.current_dimensions[1] = (self.current_dimensions[1] + 2 * padding - kernel_size + 1) // max_pool_2d
 
     class ImageDataset(Data.Dataset):
         def __init__(self):
@@ -104,7 +96,7 @@ class MelSpecApproachClassifier(Classifier):
                 for song in os.listdir(os.path.join(GTZAN_MEL, genre)):
                     abs_path = os.path.join(GTZAN_MEL, genre, song)
                     image = Image.open(abs_path)
-                    transform = transforms.Compose([transforms.PILToTensor()])
+                    transform = transforms.Compose([transforms.ToTensor()])
                     # Convert PIL Image to tensor
                     self.images.append(transform(image))
                     # Convert genre tag to associated digit
