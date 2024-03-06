@@ -8,6 +8,7 @@ that is passed into it.
 2. Use the raw wav file and use a CNN with 1DConv to classify the genre.
 3. Ensemble model.
 """
+import torch
 import torch.nn as nn
 import torch.optim as optim
 import random
@@ -129,7 +130,6 @@ class MelSpecApproachClassifier(Classifier):
         self.test_dataset = Data.DataLoader(image_dataset, batch_size=5, sampler=test_sampler)
 
     def train_model(self):
-
         for epoch in range(50):
             for batch_id, curr_batch in enumerate(self.train_dataset):
 
@@ -145,8 +145,24 @@ class MelSpecApproachClassifier(Classifier):
 
                 print(f"epoch: {epoch}, batch_id: {batch_id}, loss: {loss}")
 
+    def test_model(self):
+        # evaluation mode
+        self.model.eval()
+        correct_cnt = 0
+
+        with torch.no_grad():
+            for images, labels in self.test_dataset:
+
+                pred = self.model(images)
+                # Correctly classified genre of song snippet
+                if pred == labels:
+                    correct_cnt += 1
+
+        print(f"Test Accuracy: {correct_cnt / len(self.test_dataset)}")
+
 
 if __name__ == '__main__':
     raw_approach_classifier = RawApproachClassifier()
     mel_spec_approach_classifier = MelSpecApproachClassifier()
     mel_spec_approach_classifier.train_model()
+    mel_spec_approach_classifier.test_model()
