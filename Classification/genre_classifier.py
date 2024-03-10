@@ -136,7 +136,6 @@ class MelSpecApproachClassifier(Classifier):
     def train_model(self):
         for epoch in range(50):
             for batch_id, curr_batch in enumerate(self.train_dataset):
-
                 # Predict and get loss
                 images, labels = curr_batch[0].to(self.device), curr_batch[1].to(self.device)
                 pred = self.model(images)
@@ -159,9 +158,10 @@ class MelSpecApproachClassifier(Classifier):
 
                 images, labels = images.to(self.device), labels.to(self.device)
                 pred = self.model(images)
+
                 # Correctly classified genre of song snippet
-                if pred == labels:
-                    correct_cnt += 1
+                _, predicted = torch.max(pred, 1)
+                correct_cnt += (predicted == labels).sum().item()
 
         print(f"Test Accuracy: {correct_cnt / len(self.test_dataset)}")
 
