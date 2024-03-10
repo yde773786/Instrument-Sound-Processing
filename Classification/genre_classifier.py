@@ -32,6 +32,9 @@ GENRES = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3,
 class Classifier:
     def __init__(self):
         self.X_train, self.X_test, self.y_train, self.y_test = 0, 0, 0, 0
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        print("Using device", self.device)
 
     def test_train_split(self):
         raise NotImplementedError
@@ -113,6 +116,7 @@ class MelSpecApproachClassifier(Classifier):
         super().__init__()
         image_dataset = self.ImageDataset()
         self.model = self.MelSpecTrainer()
+        self.model.to(self.device)
         self.loss_fn = nn.CrossEntropyLoss()
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
 
@@ -134,7 +138,7 @@ class MelSpecApproachClassifier(Classifier):
             for batch_id, curr_batch in enumerate(self.train_dataset):
 
                 # Predict and get loss
-                images, labels = curr_batch
+                images, labels = curr_batch[0].to(self.device), curr_batch[1].to(self.device)
                 pred = self.model(images)
                 loss = self.loss_fn(pred, labels)
 
@@ -153,6 +157,7 @@ class MelSpecApproachClassifier(Classifier):
         with torch.no_grad():
             for images, labels in self.test_dataset:
 
+                images, labels = images.to(self.device), labels.to(self.device)
                 pred = self.model(images)
                 # Correctly classified genre of song snippet
                 if pred == labels:
