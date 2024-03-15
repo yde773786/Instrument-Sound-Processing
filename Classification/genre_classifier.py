@@ -16,12 +16,15 @@ from PIL import Image
 import torchvision.transforms as transforms
 import torch.utils.data as Data
 import os
+from PIL import ImageOps
 
 from torch.utils.data import SubsetRandomSampler
 
 # Directory of dataset used.
 GTZAN_WAV = "../GTZAN/Data/genres_original/"
 GTZAN_MEL = "../GTZAN/Data/images_original/"
+
+PREPROCESS_CROP = (54, 35, 42, 35)
 
 IMAGE_INPUT_DIMENSIONS = [432, 288]
 GENRES = {'blues': 0, 'classical': 1, 'country': 2, 'disco': 3,
@@ -100,9 +103,14 @@ class MelSpecApproachClassifier(Classifier):
                 for song in os.listdir(os.path.join(GTZAN_MEL, genre)):
                     abs_path = os.path.join(GTZAN_MEL, genre, song)
                     image = Image.open(abs_path)
+
+                    # The images have been obtained in the dataset by using the mel spectogram (librosa)
+                    # Cropping the image to only contain the spectogram to pass into CNN
+                    image_cropped = ImageOps.crop(image, PREPROCESS_CROP)
+
                     transform = transforms.Compose([transforms.ToTensor()])
                     # Convert PIL Image to tensor
-                    self.images.append(transform(image))
+                    self.images.append(transform(image_cropped))
                     # Convert genre tag to associated digit
                     self.labels.append(GENRES[genre])
 
