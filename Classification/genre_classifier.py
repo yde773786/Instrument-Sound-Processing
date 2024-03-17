@@ -75,7 +75,7 @@ class MelSpecApproachClassifier(Classifier):
 
             self.flatten_layer = nn.Flatten()
 
-            self.linear_layer = nn.Sequential(nn.Linear(118720, 512),
+            self.linear_layer = nn.Sequential(nn.Linear(69536, 512),
                                               nn.ReLU())
 
             self.classifier = nn.Linear(512, 10)
@@ -132,14 +132,23 @@ class MelSpecApproachClassifier(Classifier):
         indices = list(range(len(image_dataset)))
         random.seed(42)
         random.shuffle(indices)
+
+        # 80% dataset for training, 10% for validation, and 10% for testing.
         num_train = int(len(image_dataset) * 0.8)
-        train_indices, test_indices = indices[:num_train], indices[num_train:]
+        num_validation = int(len(image_dataset) * 0.1)
+
+        train_indices = indices[:num_train]
+        test_and_validation = indices[num_train:]
+        validation_indices = test_and_validation[:num_validation]
+        test_indices = test_and_validation[num_validation:]
 
         # Create test and train datasets
         train_sampler = SubsetRandomSampler(train_indices)
+        validation_sampler = SubsetRandomSampler(validation_indices)
         test_sampler = SubsetRandomSampler(test_indices)
         self.train_dataset = Data.DataLoader(image_dataset, batch_size=5, sampler=train_sampler)
-        self.test_dataset = Data.DataLoader(image_dataset, batch_size=5, sampler=test_sampler)
+        self.validation_dataset = Data.DataLoader(image_dataset, sampler=validation_sampler)
+        self.test_dataset = Data.DataLoader(image_dataset, sampler=test_sampler)
 
     def train_model(self):
         for epoch in range(50):
@@ -156,13 +165,20 @@ class MelSpecApproachClassifier(Classifier):
 
                 print(f"epoch: {epoch}, batch_id: {batch_id}, loss: {loss}")
 
-    def test_model(self):
+    def test_model(self, type_dataset):
         # evaluation mode
         self.model.eval()
         correct_cnt = 0
 
+        if type_dataset.lower() == "test":
+            dataset = self.test_dataset
+        elif type_dataset.lower() == "validation":
+            dataset = self.validation_dataset
+        else:
+            dataset = self.train_dataset
+
         with torch.no_grad():
-            for images, labels in self.test_dataset:
+            for images, labels in dataset:
 
                 images, labels = images.to(self.device), labels.to(self.device)
                 pred = self.model(images)
@@ -171,11 +187,13 @@ class MelSpecApproachClassifier(Classifier):
                 _, predicted = torch.max(pred, 1)
                 correct_cnt += (predicted == labels).sum().item()
 
-        print(f"Test Accuracy: {correct_cnt / len(self.test_dataset)}")
+        print(f"{type_dataset} Accuracy: {correct_cnt / len(dataset)}")
 
 
 if __name__ == '__main__':
     raw_approach_classifier = RawApproachClassifier()
     mel_spec_approach_classifier = MelSpecApproachClassifier()
     mel_spec_approach_classifier.train_model()
-    mel_spec_approach_classifier.test_model()
+    mel_spec_approach_classifier.test_model(type_dataset="Train")
+    mel_spec_approach_classifier.test_model(type_dataset="Validation")
+    mel_spec_approach_classifier.test_model(type_dataset="Test")
