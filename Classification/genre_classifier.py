@@ -187,7 +187,7 @@ class MelSpecApproachClassifier(Classifier):
                 _, predicted = torch.max(pred, 1)
                 correct_cnt += (predicted == labels).sum().item()
 
-        print(f"{type_dataset} Accuracy: {correct_cnt / len(dataset)}")
+        print(f"{type_dataset} Accuracy: {correct_cnt / (len(dataset) * dataset.batch_size)}")
 
 
 if __name__ == '__main__':
