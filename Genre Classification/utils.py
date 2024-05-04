@@ -67,8 +67,6 @@ def train_model(model, device, config, dataset):
             loss.backward()
             optimizer.step()
 
-            print(f"epoch: {epoch}, batch_id: {batch_id}, loss: {loss}")
-
         # Validation loss
         # Calculate avg.loss and accuracy for all datapoints in validation set.
         # Based on https://docs.ray.io/en/latest/tune/examples/tune-pytorch-cifar.html
